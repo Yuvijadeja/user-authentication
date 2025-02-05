@@ -32,12 +32,42 @@ function Login() {
   const [showAlert, setShowAlert] = useState(false);
 
   const handleSave = (values) => {
-    console.log(values);
-    document.cookie = `token=${values.email}; path=/; max-age=3600`; // Expires in 1 hour
-    setIsLoading(false);
-    setAlert({ type: 'success', message: 'Login successful' });
-    setShowAlert(true);
-    navigate('/');
+    setIsLoading(true);
+    const apiBaseURL = process.env.REACT_APP_API_URL;
+
+    const myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+
+    const raw = JSON.stringify({
+      "email": values.email,
+      "password": values.password
+    });
+
+    const requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: raw,
+      redirect: "follow"
+    };
+
+    fetch(`${apiBaseURL}/login`, requestOptions)
+      .then((response) => response.json())
+      .then((result) => {
+        if (result.type === "success") {
+          document.cookie = `token=${result.message}; path=/; max-age=3600`; // Expires in 1 hour
+          navigate("/");
+        } else {
+          setAlert({ type: result.type, message: result.message });
+          setShowAlert(true);
+        }
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        setAlert({ type: "error", message: "Something went wrong!" });
+        setShowAlert(true);
+        console.log(error);
+        setIsLoading(false);
+      });
   };
 
   return (

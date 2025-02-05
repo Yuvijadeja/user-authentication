@@ -24,10 +24,37 @@ function Home() {
   }, [navigate]);
 
   useEffect(() => {
-    setUser(getCookie('token'));
-    setIsLoading(false);
-  }, []);
+    const token = getCookie('token');
+    const apiBaseURL = process.env.REACT_APP_API_URL;
 
+    const myHeaders = new Headers();
+    myHeaders.append("x-access-token", token);
+
+    const requestOptions = {
+      method: "GET",
+      headers: myHeaders,
+      redirect: "follow"
+    };
+
+    fetch(`${apiBaseURL}/user`, requestOptions)
+      .then((response) => response.json())
+      .then((result) => {
+        if (result.type === "success") {
+          setUser(result.message.first_name);
+        } else {
+          setAlert({ type: result.type, message: result.message });
+          setShowAlert(true);
+        }
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.log(error);
+        setAlert({ type: "error", message: "Something went wrong!" });
+        setShowAlert(true);
+        setIsLoading(false);
+      });
+  }, []);
+  
   return (
     <div className='container-fluid'>
       {isLoading && <Loader />}

@@ -57,17 +57,51 @@ const validate = values => {
 
 function Signup() {
   const navigate = useNavigate();
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [alert, setAlert] = useState({});
   const [showAlert, setShowAlert] = useState(false);
 
   const handleSave = (values) => {
-    console.log(values);
-    setIsLoading(false);
-    setAlert({ type: 'success', message: 'Account created successfully!' });
-    setShowAlert(true);
-    navigate('/login');
+    setIsLoading(true);
+    const apiBaseURL = process.env.REACT_APP_API_URL;
+
+    const myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+
+    const raw = JSON.stringify({
+      "email": values.email,
+      "password": values.password,
+      "first_name": values.first_name,
+      "last_name": values.last_name,
+      "phone": values.phone
+    });
+
+    const requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: raw,
+      redirect: "follow"
+    };
+
+    fetch(`${apiBaseURL}/register`, requestOptions)
+      .then((response) => response.json())
+      .then((result) => {
+        setAlert({ type: result.type, message: result.message });
+        setShowAlert(true);
+        if (result.type === "success") {
+          setTimeout(() => {
+            navigate("/login");
+          }, 2000);
+        }
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.log(error);
+        setAlert({ type: "error", message: "Something went wrong!" });
+        setShowAlert(true);
+        setIsLoading(false);
+      });
   };
 
   return (
